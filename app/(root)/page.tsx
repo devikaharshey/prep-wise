@@ -1,15 +1,16 @@
-import React from "react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+
 import InterviewCard from "@/components/InterviewCard";
+import { Button } from "@/components/ui/button";
+
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import {
   getInterviewsByUserId,
   getLatestInterviews,
 } from "@/lib/actions/general.action";
 
-const Page = async () => {
+const HomePage = async () => {
   const user = await getCurrentUser();
 
   const [userInterviews, latestInterviews] = await Promise.all([
@@ -35,10 +36,10 @@ const Page = async () => {
 
         <Image
           src="/robot.png"
-          alt="robo-dude"
+          alt="Robot-dude"
           width={400}
           height={400}
-          className="max-sm:hidden"
+          className="max-md:hidden"
         />
       </section>
 
@@ -48,7 +49,7 @@ const Page = async () => {
         <div className="interviews-section">
           {hasPastInterviews ? (
             userInterviews?.map((interview) => (
-              <InterviewCard {...interview} key={interview.id} />
+              <InterviewCard key={interview.id} {...interview} />
             ))
           ) : (
             <p>You haven&apos;t taken any interviews yet</p>
@@ -62,7 +63,7 @@ const Page = async () => {
         <div className="interviews-section">
           {hasUpcomingInterviews ? (
             latestInterviews?.map((interview) => (
-              <InterviewCard {...interview} key={interview.id} />
+              <InterviewCard key={interview.id} {...interview} />
             ))
           ) : (
             <p>There are no new interviews available</p>
@@ -72,4 +73,5 @@ const Page = async () => {
     </>
   );
 };
-export default Page;
+
+export default HomePage;

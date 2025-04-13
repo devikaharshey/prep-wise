@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
+import { createFeedback } from "@/lib/actions/general.action";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -27,6 +29,7 @@ const Agent = ({
   questions,
 }: AgentProps) => {
   const router = useRouter();
+
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [messages, setMessages] = useState<SavedMessage[]>([]);
@@ -66,17 +69,18 @@ const Agent = ({
   }, []);
 
   const handleGenerateFeedback = async (messages: SavedMessage[]) => {
-    console.log("Generate feedback here.");
+    console.log("Generating feedback...");
 
-    const { success, id } = {
-      success: true,
-      id: "feedback-id",
-    };
+    const { success, feedbackId: id } = await createFeedback({
+      interviewId: interviewId!,
+      userId: userId!,
+      transcript: messages,
+    });
 
     if (success && id) {
       router.push(`/interview/${interviewId}/feedback`);
     } else {
-      console.log("Error saving feedback");
+      console.log("Error generating feedback");
       router.push("/");
     }
   };
@@ -106,7 +110,7 @@ const Agent = ({
 
       if (questions) {
         formattedQuestions = questions
-          .map((question) => `-${question}`)
+          .map((question) => `- ${question}`)
           .join("\n");
       }
 
@@ -117,6 +121,7 @@ const Agent = ({
       });
     }
   };
+
   const handleDisconnect = async () => {
     setCallStatus(CallStatus.FINISHED);
 
@@ -124,7 +129,6 @@ const Agent = ({
   };
 
   const latestMessage = messages[messages.length - 1]?.content;
-
   const isCallInactiveOrFinished =
     callStatus === CallStatus.INACTIVE || callStatus === CallStatus.FINISHED;
 
@@ -135,13 +139,15 @@ const Agent = ({
           <div className="avatar">
             <Image
               src="/ai-avatar.png"
-              alt="vapi"
+              alt="Vapi"
               width={65}
               height={54}
               className="object-cover"
             />
+
             {isSpeaking && <span className="animate-speak" />}
           </div>
+
           <h3>AI Interviewer</h3>
         </div>
 
@@ -149,11 +155,12 @@ const Agent = ({
           <div className="card-content">
             <Image
               src="/user-avatar.png"
-              alt="user avatar"
+              alt="User Avatar"
               width={540}
               height={540}
               className="rounded-full object-cover size-[120px]"
             />
+
             <h3>{userName}</h3>
           </div>
         </div>
@@ -165,7 +172,7 @@ const Agent = ({
             <p
               key={latestMessage}
               className={cn(
-                "transaction-opacity duration-500 opacity-0",
+                "transition-opacity duration-500 opacity-0",
                 "animate-fadeIn opacity-100",
               )}
             >
@@ -184,7 +191,10 @@ const Agent = ({
                 callStatus !== "CONNECTING" && "hidden",
               )}
             />
-            <span>{isCallInactiveOrFinished ? "Call" : "..."}</span>
+
+            <span className="relative">
+              {isCallInactiveOrFinished ? "Call" : ". . ."}
+            </span>
           </button>
         ) : (
           <button className="btn-disconnect" onClick={handleDisconnect}>
@@ -195,4 +205,5 @@ const Agent = ({
     </>
   );
 };
+
 export default Agent;
